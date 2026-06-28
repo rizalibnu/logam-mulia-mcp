@@ -16,7 +16,7 @@ from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
