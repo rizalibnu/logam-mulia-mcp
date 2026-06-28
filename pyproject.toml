@@ -1,0 +1,20 @@
+[project]
+name = "logam-mulia-mcp"
+version = "1.0.0"
+description = "MCP server for Logam Mulia API — Indonesian gold prices"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.2.0",
+    "httpx>=0.28.0",
+]
+
+[project.urls]
+Home = "https://github.com/iamutaki/logam-mulia-api"
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

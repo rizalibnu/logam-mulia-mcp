@@ -1,0 +1,79 @@
+Metadata-Version: 2.4
+Name: logam-mulia-mcp
+Version: 1.0.0
+Summary: MCP server for Logam Mulia API — Indonesian gold prices
+Project-URL: Home, https://github.com/iamutaki/logam-mulia-api
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: mcp>=1.2.0
+Requires-Dist: httpx>=0.28.0
+
+# Logam Mulia MCP Server
+
+MCP server for Indonesian gold (logam mulia) prices from 18+ sources.
+
+**Source API:** [logam-mulia-api](https://github.com/iamutaki/logam-mulia-api)
+
+## Quick Start
+
+```bash
+# Run directly
+pip install logam-mulia-mcp/
+python -m logam_mulia_mcp.server
+```
+
+```bash
+# Docker
+docker build -t logam-mulia-mcp logam-mulia-mcp/
+docker run --rm -i logam-mulia-mcp
+```
+
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_price(source, refresh?)` | Latest price from a source |
+| `get_price_history(source, page?, length?, weight?, material?, material_type?)` | Paginated history |
+| `list_sources()` | All 18 available sources |
+| `get_all_prices()` | Latest from all sources at once |
+| `get_news()` | Latest gold news articles |
+| `get_news_detail(url)` | Full article text |
+
+## Configuration
+
+| Env | Default | Description |
+|-----|---------|-------------|
+| `LOGAM_MULIA_BASE_URL` | `https://logam-mulia-api.iamutaki.workers.dev` | API base URL |
+| `MCP_TRANSPORT` | `stdio` | Transport: `stdio` or `sse` |
+| `HTTP_TIMEOUT` | `30` | HTTP client timeout (s) |
+
+## Claude Code Integration
+
+Add to Claude Code config (`~/.claude.json` or project `.claude/settings.local.json`):
+
+```json
+{
+  "mcpServers": {
+    "logam-mulia": {
+      "command": "python",
+      "args": ["-m", "logam_mulia_mcp.server"],
+      "env": {
+        "LOGAM_MULIA_BASE_URL": "https://logam-mulia-api.iamutaki.workers.dev"
+      }
+    }
+  }
+}
+```
+
+Or with Docker:
+
+```json
+{
+  "mcpServers": {
+    "logam-mulia": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "logam-mulia-mcp"]
+    }
+  }
+}
+```
