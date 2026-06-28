@@ -7,15 +7,13 @@ MCP server for Indonesian gold (logam mulia) prices from 18+ sources.
 ## Quick Start
 
 ```bash
-# Run directly
-pip install logam-mulia-mcp/
-python -m logam_mulia_mcp.server
+# Run directly (from repo)
+uv run python -m logam_mulia_mcp.server
 ```
 
 ```bash
-# Docker
-docker build -t logam-mulia-mcp logam-mulia-mcp/
-docker run --rm -i logam-mulia-mcp
+# Run from GitHub (no clone needed)
+uvx --from git+https://github.com/rizalibnu/logam-mulia-mcp logam-mulia-mcp
 ```
 
 ## MCP Tools
@@ -37,33 +35,39 @@ docker run --rm -i logam-mulia-mcp
 | `MCP_TRANSPORT` | `stdio` | Transport: `stdio` or `sse` |
 | `HTTP_TIMEOUT` | `30` | HTTP client timeout (s) |
 
-## Claude Code Integration
+## Integration
 
-Add to Claude Code config (`~/.claude.json` or project `.claude/settings.local.json`):
+### Claude Code / Cursor / Any MCP host (via uvx)
 
 ```json
 {
   "mcpServers": {
     "logam-mulia": {
-      "command": "python",
-      "args": ["-m", "logam_mulia_mcp.server"],
-      "env": {
-        "LOGAM_MULIA_BASE_URL": "https://logam-mulia-api.iamutaki.workers.dev"
-      }
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/rizalibnu/logam-mulia-mcp", "logam-mulia-mcp"]
     }
   }
 }
 ```
 
-Or with Docker:
+No install, no clone. `uvx` fetches & caches automatically.
 
-```json
-{
-  "mcpServers": {
-    "logam-mulia": {
-      "command": "docker",
-      "args": ["run", "--rm", "-i", "logam-mulia-mcp"]
-    }
-  }
-}
+### Hermes
+
+```yaml
+tools:
+  mcp_servers:
+    logam-mulia:
+      command: uvx
+      args:
+        - --from
+        - git+https://github.com/rizalibnu/logam-mulia-mcp
+        - logam-mulia-mcp
+```
+
+### Direct (any shell)
+
+```bash
+pip install -e .
+logam-mulia-mcp
 ```

@@ -16,5 +16,8 @@ Home = "https://github.com/iamutaki/logam-mulia-api"
 requires = ["setuptools>=75.0"]
 build-backend = "setuptools.build_meta"
 
+[project.scripts]
+logam-mulia-mcp = "logam_mulia_mcp.server:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
