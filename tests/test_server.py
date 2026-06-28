@@ -114,7 +114,7 @@ MOCK_NEWS_DETAIL_RESPONSE = {
 
 class TestServerIdentity:
     def test_version(self):
-        assert __version__ == "1.0.0"
+        assert __version__ == "1.0.1"
 
     def test_fastmcp_name(self):
         assert mcp.name == "logam-mulia"
