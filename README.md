@@ -12,8 +12,8 @@ uv run python -m logam_mulia_mcp.server
 ```
 
 ```bash
-# Run from GitHub (no clone needed)
-uvx --from git+https://github.com/rizalibnu/logam-mulia-mcp logam-mulia-mcp
+# Run from PyPI (no clone, no install)
+uvx logam-mulia-mcp
 ```
 
 ## MCP Tools
@@ -44,13 +44,13 @@ uvx --from git+https://github.com/rizalibnu/logam-mulia-mcp logam-mulia-mcp
   "mcpServers": {
     "logam-mulia": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/rizalibnu/logam-mulia-mcp", "logam-mulia-mcp"]
+      "args": ["logam-mulia-mcp"]
     }
   }
 }
 ```
 
-No install, no clone. `uvx` fetches & caches automatically.
+No install, no clone. `uvx` fetches from PyPI automatically.
 
 ### Hermes
 
@@ -60,8 +60,6 @@ tools:
     logam-mulia:
       command: uvx
       args:
-        - --from
-        - git+https://github.com/rizalibnu/logam-mulia-mcp
         - logam-mulia-mcp
 ```
 
