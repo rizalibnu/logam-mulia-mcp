@@ -11,11 +11,12 @@ Transport: stdio (default) or sse via MCP_TRANSPORT=sse.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+
+__version__ = "1.0.0"
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ mcp = FastMCP(
         "Get current prices, history, and news. "
         "Configure LOGAM_MULIA_BASE_URL env to change API base."
     ),
+    website_url="https://github.com/rizalibnu/logam-mulia-mcp",
 )
 
 # ── HTTP Client (lazy) ─────────────────────────────────────────────────────
