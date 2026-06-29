@@ -11,7 +11,6 @@ from logam_mulia_mcp.server import (
     PRICE_SOURCES,
     __version__,
     get_all_prices,
-    get_all_sources,
     get_client,
     get_news,
     get_news_detail,
@@ -115,7 +114,7 @@ MOCK_NEWS_DETAIL_RESPONSE = {
 
 class TestServerIdentity:
     def test_version(self):
-        assert __version__ == "1.1.0"
+        assert __version__ == "1.0.1"
 
     def test_fastmcp_name(self):
         assert mcp.name == "logam-mulia"
@@ -225,15 +224,6 @@ class TestGetAllPrices:
         result = await get_all_prices()
         for s in PRICE_SOURCES:
             assert s["id"] in result
-
-
-class TestGetAllSources:
-    def test_returns_structured_list(self):
-        result = get_all_sources()
-        assert isinstance(result, list)
-        assert len(result) == len(PRICE_SOURCES)
-        assert result[0]["id"] == PRICE_SOURCES[0]["id"]
-        assert result[0]["name"] == PRICE_SOURCES[0]["name"]
 
 
 class TestGetNews:
