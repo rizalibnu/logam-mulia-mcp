@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-06-29
+
+### Added
+- Pre-commit hooks: ruff lint + format, pytest on commit
+- GitHub Actions: test, PyPI publish, and GitHub Release on tag push
+- Optional `LOGAM_MULIA_BASE_URL` env shown in Claude Code & Hermes integration examples
+
 ### Added
 - Pre-commit hooks: ruff lint + format, pytest on commit
 - GitHub Actions: test, PyPI publish, and GitHub Release on tag push
