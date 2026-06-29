@@ -16,7 +16,7 @@ from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
@@ -209,6 +209,15 @@ def list_sources() -> str:
     lines.append("")
     lines.append(f"Base URL: {BASE_URL}")
     return "\n".join(lines)
+
+
+@mcp.tool()
+def get_all_sources() -> list[dict[str, str]]:
+    """Get all available price sources as structured data.
+
+    Returns list of {id, name} objects for programmatic use.
+    """
+    return list(PRICE_SOURCES)
 
 
 @mcp.tool()
