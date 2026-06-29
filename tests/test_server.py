@@ -1,8 +1,8 @@
 """Unit tests for the Logam Mulia MCP server tools."""
+
 from __future__ import annotations
 
-import os
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -76,7 +76,6 @@ MOCK_HISTORY_RESPONSE = {
             "recordedDate": "2026-06-27",
         },
     ],
-    "success": True,
     "timestamp": "2026-06-28T00:00:00.000Z",
 }
 
@@ -122,6 +121,7 @@ class TestServerIdentity:
     def test_website_url(self):
         """FastMCP has website_url in its init signature."""
         import inspect
+
         sig = inspect.signature(type(mcp).__init__)
         assert "website_url" in sig.parameters
 
@@ -163,6 +163,7 @@ class TestGetPrice:
     @patch("logam_mulia_mcp.server._api_get")
     async def test_404_source_not_found(self, mock_api_get):
         from httpx import HTTPStatusError, Request
+
         request = Request("GET", "http://test.com")
         mock_api_get.side_effect = HTTPStatusError(
             "404", request=request, response=httpx.Response(404, request=request)
@@ -270,7 +271,9 @@ class TestHttpClient:
     def test_client_custom_base_url(self, monkeypatch):
         monkeypatch.setenv("LOGAM_MULIA_BASE_URL", "https://custom.example.com/api")
         import importlib
+
         import logam_mulia_mcp.server as srv
+
         importlib.reload(srv)
         client = srv.get_client()
         assert "custom.example.com" in str(client.base_url)
@@ -282,8 +285,10 @@ class TestHttpClient:
 class TestConfigEnv:
     def test_default_transport(self):
         from logam_mulia_mcp.server import TRANSPORT
+
         assert TRANSPORT == "stdio"
 
     def test_default_timeout(self):
         from logam_mulia_mcp.server import HTTP_TIMEOUT
+
         assert HTTP_TIMEOUT == 30

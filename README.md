@@ -39,12 +39,30 @@ uvx logam-mulia-mcp
 
 ### Claude Code / Cursor / Any MCP host (via uvx)
 
+Add to your `claude_desktop_config.json` or `.cursor/mcp.json`:
+
 ```json
 {
   "mcpServers": {
     "logam-mulia": {
       "command": "uvx",
       "args": ["logam-mulia-mcp"]
+    }
+  }
+}
+```
+
+**Optional: custom API base URL**
+
+```json
+{
+  "mcpServers": {
+    "logam-mulia": {
+      "command": "uvx",
+      "args": ["logam-mulia-mcp"],
+      "env": {
+        "LOGAM_MULIA_BASE_URL": "https://your-proxy.example.com"
+      }
     }
   }
 }
@@ -61,11 +79,17 @@ tools:
       command: uvx
       args:
         - logam-mulia-mcp
+      # env:                          # optional custom base URL
+      #   LOGAM_MULIA_BASE_URL: https://your-proxy.example.com
 ```
 
 ### Direct (any shell)
 
 ```bash
+# With default API
 pip install -e .
 logam-mulia-mcp
+
+# With custom API base URL
+LOGAM_MULIA_BASE_URL=https://your-proxy.example.com logam-mulia-mcp
 ```

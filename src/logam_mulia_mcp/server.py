@@ -120,10 +120,7 @@ async def get_price(
     if not prices:
         return f"No price data for source '{source}'."
 
-    lines = [
-        f"Source: {p.get('displayName', source)} ({p.get('source', '')})"
-        for p in prices
-    ]
+    lines = [f"Source: {p.get('displayName', source)} ({p.get('source', '')})" for p in prices]
     for p in prices:
         lines.append(
             f"  - {p.get('material', '?')}/{p.get('materialType', '?')} "
