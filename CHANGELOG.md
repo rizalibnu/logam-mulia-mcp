@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-07-01
+
+### Changed
+- Price sources now fetched live from `/api/prices` endpoint instead of hardcoded list
+- `list_sources()` is now async — fetches dynamic source list with 5-min cache
+- `get_all_prices()` uses live sources
+- API failure falls back to stale cache — server never crashes on transient errors
+
+### Added
+- `AGENT.md` — agent guide for AI coding assistants
+- `release.sh` — automated release script (bump version, changelog, tag, push)
+
 ## [1.1.1] — 2026-06-29
 
 ### Added
@@ -40,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit test suite with pytest
 
 [//]: # (Versions are references for comparison links — collapsed until a proper versioned release tag exists.)
-[unreleased]: https://github.com/rizalibnu/logam-mulia-mcp/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/rizalibnu/logam-mulia-mcp/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/rizalibnu/logam-mulia-mcp/releases/tag/v1.2.0
 [1.0.1]: https://github.com/rizalibnu/logam-mulia-mcp/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rizalibnu/logam-mulia-mcp/releases/tag/v1.0.0
