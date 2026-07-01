@@ -11,12 +11,13 @@ Transport: stdio (default) or sse via MCP_TRANSPORT=sse.
 from __future__ import annotations
 
 import os
+import time
 from typing import Any
 
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
@@ -27,34 +28,12 @@ BASE_URL = os.environ.get(
 TRANSPORT = os.environ.get("MCP_TRANSPORT", "stdio")
 HTTP_TIMEOUT = int(os.environ.get("HTTP_TIMEOUT", "30"))
 
-# Known price sources from the Logam Mulia API
-PRICE_SOURCES: list[dict[str, str]] = [
-    {"id": "anekalogam", "name": "Aneka Logam"},
-    {"id": "hargaemas-org", "name": "Harga Emas (hargaemas.org)"},
-    {"id": "lakuemas", "name": "Laku Emas"},
-    {"id": "sakumas", "name": "Saku Mas"},
-    {"id": "kursdolar", "name": "Kurs Dolar"},
-    {"id": "cermati", "name": "Cermati"},
-    {"id": "indogold", "name": "Indogold"},
-    {"id": "hargaemas-net", "name": "Harga Emas (hargaemas.net)"},
-    {"id": "hargaemas-com", "name": "Harga Emas (hargaemas.com)"},
-    {"id": "treasury", "name": "Treasury"},
-    {"id": "logammulia", "name": "Logam Mulia"},
-    {"id": "emasku", "name": "Emasku"},
-    {"id": "hartadinataabadi", "name": "Hartadinata Abadi"},
-    {"id": "galeri24", "name": "Galeri 24"},
-    {"id": "sampoernagold", "name": "Sampoerna Gold"},
-    {"id": "bankbsi", "name": "Bank BSI"},
-    {"id": "brankaslm", "name": "Brankas LM"},
-    {"id": "pegadaian", "name": "Pegadaian"},
-]
-
 # ── MCP Server ─────────────────────────────────────────────────────────────
 
 mcp = FastMCP(
     "logam-mulia",
     instructions=(
-        "Indonesian gold (logam mulia) price data from 18+ sources. "
+        "Indonesian gold (logam mulia) price data from dynamic sources. "
         "Get current prices, history, and news. "
         "Configure LOGAM_MULIA_BASE_URL env to change API base."
     ),
@@ -83,6 +62,37 @@ async def _api_get(path: str, params: dict[str, Any] | None = None) -> dict[str,
     resp = await client.get(path, params=params)
     resp.raise_for_status()
     return resp.json()
+
+
+# ── Dynamic source list (live from API, cached 5 min) ─────────────────────
+
+_sources_cache: tuple[float, list[dict[str, str]]] | None = None
+_SOURCE_CACHE_TTL = 300  # 5 minutes
+
+
+async def _get_sources() -> list[dict[str, str]]:
+    """Fetch available price sources from the API, cached for 5 min."""
+    global _sources_cache  # noqa: PLW0603
+
+    now = time.time()
+    if _sources_cache is not None and (now - _sources_cache[0]) < _SOURCE_CACHE_TTL:
+        return _sources_cache[1]
+
+    try:
+        data = await _api_get("/api/prices")
+        if not data.get("data"):
+            return _sources_cache[1] if _sources_cache else []
+
+        sources = [
+            {"id": s["name"], "name": s.get("displayName", s["name"])}
+            for s in data["data"]
+            if s.get("name")
+        ]
+        _sources_cache = (now, sources)
+        return sources
+    except Exception:  # noqa: BLE001
+        # On failure, return stale cache if available
+        return _sources_cache[1] if _sources_cache else []
 
 
 # ── Tools ──────────────────────────────────────────────────────────────────
@@ -198,10 +208,11 @@ async def get_price_history(
 
 
 @mcp.tool()
-def list_sources() -> str:
+async def list_sources() -> str:
     """List all available price sources."""
-    lines = [f"Available sources ({len(PRICE_SOURCES)}):", ""]
-    for s in PRICE_SOURCES:
+    sources = await _get_sources()
+    lines = [f"Available sources ({len(sources)}):", ""]
+    for s in sources:
         lines.append(f"  {s['id']:25s} — {s['name']}")
     lines.append("")
     lines.append(f"Base URL: {BASE_URL}")
@@ -225,7 +236,7 @@ async def get_news() -> str:
 
     lines = [f"Latest gold news ({len(articles)} articles):", ""]
     for a in articles:
-        lines.append(f"  📰 {a.get('title', '?')}")
+        lines.append(f"  \U0001f4f0 {a.get('title', '?')}")
         lines.append(f"     Category: {a.get('category', '?')}")
         lines.append(f"     Published: {a.get('publishedAt', '?')}")
         lines.append(f"     Summary: {a.get('summary', '?')[:200]}")
@@ -269,9 +280,10 @@ async def get_news_detail(url: str) -> str:
 @mcp.tool()
 async def get_all_prices() -> str:
     """Get latest gold prices from ALL available sources at once."""
+    sources = await _get_sources()
     results = []
 
-    for source_info in PRICE_SOURCES:
+    for source_info in sources:
         sid = source_info["id"]
         try:
             data = await _api_get(f"/api/prices/{sid}")

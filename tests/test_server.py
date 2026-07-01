@@ -8,7 +8,6 @@ import httpx
 import pytest
 
 from logam_mulia_mcp.server import (
-    PRICE_SOURCES,
     __version__,
     get_all_prices,
     get_client,
@@ -22,16 +21,13 @@ from logam_mulia_mcp.server import (
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
-
-@pytest.fixture(autouse=True)
-def reset_client():
-    """Reset the lazy HTTP client between tests so state is clean."""
-    import logam_mulia_mcp.server as srv
-
-    srv._client = None
-    yield
-    srv._client = None
-
+MOCK_SOURCES_RESPONSE = {
+    "data": [
+        {"name": "pegadaian", "displayName": "Pegadaian"},
+        {"name": "anekalogam", "displayName": "Aneka Logam"},
+        {"name": "galeri24", "displayName": "Galeri 24"},
+    ],
+}
 
 MOCK_PRICE_RESPONSE = {
     "success": True,
@@ -108,12 +104,24 @@ MOCK_NEWS_DETAIL_RESPONSE = {
 }
 
 
+@pytest.fixture(autouse=True)
+def reset_state():
+    """Reset lazy client + sources cache between tests."""
+    import logam_mulia_mcp.server as srv
+
+    srv._client = None
+    srv._sources_cache = None
+    yield
+    srv._client = None
+    srv._sources_cache = None
+
+
 # ── Config & Identity ───────────────────────────────────────────────────────
 
 
 class TestServerIdentity:
     def test_version(self):
-        assert __version__ == "1.1.1"
+        assert __version__ == "1.2.0"
 
     def test_fastmcp_name(self):
         assert mcp.name == "logam-mulia"
@@ -130,15 +138,28 @@ class TestServerIdentity:
 
 
 class TestListSources:
-    def test_returns_all_sources(self):
-        result = list_sources()
-        for s in PRICE_SOURCES:
-            assert s["id"] in result
-        assert str(len(PRICE_SOURCES)) in result
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_returns_all_sources(self, mock_api_get):
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        result = await list_sources()
+        assert "Pegadaian" in result
+        assert "Aneka Logam" in result
+        assert "Galeri 24" in result
+        assert "3" in result
 
-    def test_returns_base_url(self):
-        result = list_sources()
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_returns_base_url(self, mock_api_get):
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        result = await list_sources()
         assert "logam-mulia-api.iamutaki.workers.dev" in result
+
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_cache_hits(self, mock_api_get):
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        await list_sources()
+        first_count = mock_api_get.call_count
+        await list_sources()
+        assert mock_api_get.call_count == first_count  # no extra calls
 
 
 class TestGetPrice:
@@ -155,7 +176,6 @@ class TestGetPrice:
     async def test_refresh_param(self, mock_api_get):
         mock_api_get.return_value = MOCK_PRICE_RESPONSE
         await get_price("pegadaian", refresh=True)
-        # params passed as 2nd positional arg
         args = mock_api_get.call_args[0]
         assert "/api/prices/pegadaian" in args[0]
         assert args[1].get("refresh") == "true"
@@ -221,10 +241,17 @@ class TestGetPriceHistory:
 class TestGetAllPrices:
     @patch("logam_mulia_mcp.server._api_get")
     async def test_includes_all_sources(self, mock_api_get):
-        mock_api_get.return_value = MOCK_PRICE_RESPONSE
+        def side_effect(path, params=None):
+            if path == "/api/prices":
+                return MOCK_SOURCES_RESPONSE
+            return MOCK_PRICE_RESPONSE
+
+        mock_api_get.side_effect = side_effect
         result = await get_all_prices()
-        for s in PRICE_SOURCES:
-            assert s["id"] in result
+        assert "pegadaian" in result
+        assert "anekalogam" in result
+        assert "galeri24" in result
+        assert "Sell" in result
 
 
 class TestGetNews:
@@ -277,6 +304,40 @@ class TestHttpClient:
         importlib.reload(srv)
         client = srv.get_client()
         assert "custom.example.com" in str(client.base_url)
+
+
+# ── Sources cache ──────────────────────────────────────────────────────────
+
+
+class TestSourcesCache:
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_get_sources_populates_cache(self, mock_api_get):
+        import logam_mulia_mcp.server as srv
+
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        await list_sources()
+        assert srv._sources_cache is not None
+        assert len(srv._sources_cache[1]) == 3
+        assert srv._sources_cache[1][0]["id"] == "pegadaian"
+        assert srv._sources_cache[1][0]["name"] == "Pegadaian"
+
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_cache_used_on_subsequent_calls(self, mock_api_get):
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        await list_sources()
+        await list_sources()
+        # Only 1 API call (sources cached after first)
+        assert mock_api_get.call_count == 1
+
+    @patch("logam_mulia_mcp.server._api_get")
+    async def test_api_failure_uses_stale_cache(self, mock_api_get):
+        mock_api_get.return_value = MOCK_SOURCES_RESPONSE
+        await list_sources()
+
+        mock_api_get.side_effect = httpx.RequestError("network down")
+        result = await list_sources()
+        # Should still return cached sources
+        assert "Pegadaian" in result
 
 
 # ── ENV Override ───────────────────────────────────────────────────────────
